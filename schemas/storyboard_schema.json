@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Storyboard",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title of the video"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the video content"
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "scene_id": {
+            "type": "integer",
+            "description": "Unique identifier for the scene"
+          },
+          "duration": {
+            "type": "number",
+            "description": "Duration of the scene in seconds"
+          },
+          "narration": {
+            "type": "string",
+            "description": "Text to be narrated in this scene"
+          },
+          "animation_type": {
+            "type": "string",
+            "enum": ["text", "equation", "graph", "shape", "transformation", "custom"],
+            "description": "Type of animation to use"
+          },
+          "elements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["text", "equation", "circle", "square", "arrow", "line", "axes", "graph"]
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Content to display (text, LaTeX, etc.)"
+                },
+                "position": {
+                  "type": "array",
+                  "items": {"type": "number"},
+                  "minItems": 2,
+                  "maxItems": 3,
+                  "description": "Position [x, y] or [x, y, z]"
+                },
+                "color": {
+                  "type": "string",
+                  "description": "Color name or hex code"
+                },
+                "animation": {
+                  "type": "string",
+                  "enum": ["Write", "FadeIn", "FadeOut", "Create", "Transform", "GrowFromCenter", "ShowCreation"],
+                  "description": "Animation method to use"
+                },
+                "scale": {
+                  "type": "number",
+                  "description": "Scale factor for the element"
+                }
+              },
+              "required": ["type", "content", "animation"]
+            }
+          }
+        },
+        "required": ["scene_id", "narration", "animation_type", "elements"]
+      }
+    }
+  },
+  "required": ["title", "scenes"]
+}

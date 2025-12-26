@@ -1,0 +1,143 @@
+You are an expert at creating educational video storyboards in the style of 3Blue1Brown.
+
+Given the following transcript, create a detailed storyboard for a Manim animation video.
+
+TRANSCRIPT:
+{transcript}
+
+Your task is to analyze the transcript and create a JSON storyboard that breaks down the content into visual scenes. Each scene should:
+
+1. Have a clear narration text
+2. Specify the type of animation (text, equation, graph, shape, transformation, custom)
+3. Include specific visual elements with:
+   - Type (text, equation, circle, square, arrow, line, axes, graph)
+   - Content (the actual text/LaTeX/shape)
+   - Position coordinates [x, y] where (0,0) is center
+   - Color (use color names like BLUE, RED, GREEN, YELLOW, WHITE, etc.)
+   - Animation method (Write, FadeIn, Create, Transform, GrowFromCenter, etc.)
+   - Scale factor (typically 0.5 to 2.0)
+
+4. Each scene should last 3-8 seconds depending on complexity
+
+Guidelines:
+- Break complex concepts into multiple simple scenes
+- Use mathematical equations in LaTeX format when relevant
+- Position elements strategically: UP=[0,1,0], DOWN=[0,-1,0], LEFT=[-1,0,0], RIGHT=[1,0,0]
+- Use colors to highlight important concepts
+- Suggest smooth transitions between scenes
+- Keep text concise and readable
+
+Output ONLY valid JSON following this structure. To be followed STRICTLY:
+{
+  "title": "Understanding Animated Storyboards",
+  "description": "An introductory video explaining how storyboard-driven animations work using structured JSON.",
+  "scenes": [
+    {
+      "scene_id": 1,
+      "duration": 5,
+      "narration": "Welcome! In this video, we will explore how a storyboard controls animated videos.",
+      "animation_type": "text",
+      "elements": [
+        {
+          "type": "text",
+          "content": "Welcome to Animated Storyboards",
+          "position": [0, 2],
+          "color": "BLUE",
+          "animation": "Write",
+          "scale": 1.6
+        },
+        {
+          "type": "text",
+          "content": "Powered by JSON + Manim",
+          "position": [0, 1],
+          "color": "GREEN",
+          "animation": "FadeIn",
+          "scale": 1.1
+        }
+      ]
+    },
+    {
+      "scene_id": 2,
+      "duration": 7,
+      "narration": "Each scene contains visual elements, their positions, and animations that define how they appear.",
+      "animation_type": "shape",
+      "elements": [
+        {
+          "type": "square",
+          "content": "",
+          "position": [-2, 0],
+          "color": "YELLOW",
+          "animation": "Create",
+          "scale": 1.2
+        },
+        {
+          "type": "circle",
+          "content": "",
+          "position": [2, 0],
+          "color": "RED",
+          "animation": "GrowFromCenter",
+          "scale": 1.0
+        },
+        {
+          "type": "text",
+          "content": "Shapes are visual building blocks",
+          "position": [0, -2],
+          "color": "WHITE",
+          "animation": "FadeIn",
+          "scale": 0.9
+        }
+      ]
+    },
+    {
+      "scene_id": 3,
+      "duration": 8,
+      "narration": "Storyboards can also display equations, graphs, and transformations for educational content.",
+      "animation_type": "equation",
+      "elements": [
+        {
+          "type": "equation",
+          "content": "E = mc^2",
+          "position": [0, 1],
+          "color": "ORANGE",
+          "animation": "Write",
+          "scale": 1.4
+        },
+        {
+          "type": "arrow",
+          "content": "",
+          "position": [0, -0.5],
+          "color": "WHITE",
+          "animation": "ShowCreation",
+          "scale": 1.0
+        },
+        {
+          "type": "text",
+          "content": "Math and visuals work together",
+          "position": [0, -2],
+          "color": "BLUE",
+          "animation": "FadeIn",
+          "scale": 1.0
+        }
+      ]
+    },
+    {
+      "scene_id": 4,
+      "duration": 6,
+      "narration": "By chaining scenes together, we create a complete animated video from structured data.",
+      "animation_type": "transformation",
+      "elements": [
+        {
+          "type": "text",
+          "content": "Scene → Animation → Video",
+          "position": [0, 0],
+          "color": "PURPLE",
+          "animation": "Transform",
+          "scale": 1.5
+        }
+      ]
+    }
+  ]
+}
+
+
+Remember: Output ONLY the JSON, no additional text or explanation.

@@ -1,0 +1,23 @@
+Welcome to this explanation of the Pythagorean theorem!
+
+The Pythagorean theorem is one of the most famous theorems in mathematics. It states that in a right-angled triangle, the square of the length of the hypotenuse is equal to the sum of the squares of the other two sides.
+
+Let's write this mathematically. If we have a right triangle with sides a, b, and hypotenuse c, then: a squared plus b squared equals c squared.
+
+Why is this true? Let me show you a beautiful visual proof.
+
+Imagine a square with side length a plus b. Inside this square, we can arrange four identical right triangles, each with sides a and b, and hypotenuse c.
+
+The area of the large square is (a plus b) squared, which equals a squared plus 2ab plus b squared.
+
+Now, the four triangles each have area one-half times a times b. So the total area of the triangles is 2ab.
+
+The remaining area in the center forms a square with side length c. This square has area c squared.
+
+Therefore, the large square's area equals the four triangles plus the center square: a squared plus 2ab plus b squared equals 2ab plus c squared.
+
+If we subtract 2ab from both sides, we get: a squared plus b squared equals c squared.
+
+And that's the Pythagorean theorem! This beautiful relationship has applications in geometry, physics, engineering, and many other fields.
+
+Thank you for watching!
