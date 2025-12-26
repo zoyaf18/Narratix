@@ -127,21 +127,143 @@ class StoryboardAgent:
         )
 
         chain = prompt | llm
-        result = chain.invoke({"transcript": transcript})
+        raw_result = chain.invoke({"transcript": transcript})
 
+        # Extract text from various llm return types
+        result_text = None
+        if isinstance(raw_result, str):
+            result_text = raw_result
+        elif isinstance(raw_result, dict):
+            for key in ("text", "content", "response", "output", "result"):
+                if key in raw_result and isinstance(raw_result[key], str):
+                    result_text = raw_result[key]
+                    break
+            if not result_text and "generations" in raw_result:
+                try:
+                    result_text = raw_result["generations"][0][0]["text"]
+                except Exception:
+                    pass
+        else:
+            # Try attribute access for common LLM return objects
+            if hasattr(raw_result, "generations"):
+                try:
+                    gens = raw_result.generations
+                    if isinstance(gens, list) and gens and isinstance(gens[0], list):
+                        result_text = gens[0][0].text
+                except Exception:
+                    pass
+            if not result_text and hasattr(raw_result, "text"):
+                try:
+                    result_text = raw_result.text
+                except Exception:
+                    pass
+
+        if result_text is None:
+            result_text = str(raw_result)
+
+        # Try to parse JSON directly, then try extracting a JSON substring, else create a safe fallback
+        storyboard = None
         try:
-            return json.loads(result)
+            storyboard = json.loads(result_text)
         except json.JSONDecodeError:
-            return {
+            # Attempt to extract the first balanced JSON object from the text
+            start = result_text.find("{")
+            if start != -1:
+                count = 0
+                for i in range(start, len(result_text)):
+                    if result_text[i] == "{":
+                        count += 1
+                    elif result_text[i] == "}":
+                        count -= 1
+                        if count == 0:
+                            candidate = result_text[start:i+1]
+                            try:
+                                storyboard = json.loads(candidate)
+                                break
+                            except json.JSONDecodeError:
+                                # continue searching
+                                continue
+
+        if storyboard is None:
+            # Build a schema-compliant fallback storyboard using the raw text as narration
+            storyboard = {
                 "title": "Generated Storyboard",
+                "description": "Auto-generated fallback storyboard due to non-JSON model output",
                 "scenes": [
                     {
-                        "id": 1,
-                        "description": result,
-                        "actions": []
+                        "scene_id": 1,
+                        "duration": 5,
+                        "narration": result_text.strip(),
+                        "animation_type": "text",
+                        "elements": [
+                            {
+                                "type": "text",
+                                "content": result_text.strip(),
+                                "position": [0, 0],
+                                "color": "WHITE",
+                                "animation": "FadeIn",
+                                "scale": 1.0
+                            }
+                        ]
                     }
                 ]
             }
+
+        # Normalize and validate minimal schema expectations
+        def _normalize(sb: dict) -> dict:
+            if not isinstance(sb, dict):
+                return storyboard
+            if "title" not in sb:
+                sb["title"] = "Generated Storyboard"
+            if "scenes" not in sb or not isinstance(sb["scenes"], list):
+                sb["scenes"] = []
+
+            normalized = []
+            for idx, s in enumerate(sb["scenes"], start=1):
+                if not isinstance(s, dict):
+                    s = {"narration": str(s)}
+                scene_id = s.get("scene_id") or s.get("id") or idx
+                duration = s.get("duration", 5)
+                narration = s.get("narration") or s.get("description") or s.get("text") or ""
+                animation_type = s.get("animation_type") or s.get("type") or "text"
+
+                elements = s.get("elements") or s.get("actions") or []
+                normalized_elements = []
+                for e in elements:
+                    if isinstance(e, str):
+                        normalized_elements.append({
+                            "type": "text",
+                            "content": e,
+                            "position": [0, 0],
+                            "color": "WHITE",
+                            "animation": "FadeIn",
+                            "scale": 1.0
+                        })
+                        continue
+                    if not isinstance(e, dict):
+                        continue
+                    normalized_elements.append({
+                        "type": e.get("type", "text"),
+                        "content": e.get("content", ""),
+                        "position": e.get("position", [0, 0]),
+                        "color": e.get("color", "WHITE"),
+                        "animation": e.get("animation", "FadeIn"),
+                        "scale": e.get("scale", 1.0)
+                    })
+
+                normalized.append({
+                    "scene_id": int(scene_id),
+                    "duration": duration,
+                    "narration": narration,
+                    "animation_type": animation_type,
+                    "elements": normalized_elements
+                })
+
+            sb["scenes"] = normalized
+            return sb
+
+        storyboard = _normalize(storyboard)
+        return storyboard
 
 
     def save_storyboard(self, storyboard: dict, path: str):
