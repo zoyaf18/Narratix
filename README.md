@@ -13,6 +13,10 @@ NARRATIX/
 │   └── llm_config.py             # LLM configuration (Ollama/API providers)
 ├── data/
 │   └── storyboard.json           # Generated storyboard (auto-created)
+├── frontend/                     # React UI (Vite)
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.js
 ├── input/
 │   └── transcript.txt            # Input transcript file (create this)
 ├── prompts/
@@ -25,8 +29,11 @@ NARRATIX/
 │   └── generated_scene.py        # Generated Manim scene (auto-generated)
 ├── schemas/
 │   └── storyboard_schema.json    # JSON schema for storyboard
+├── web/
+│   └── server.py                 # FastAPI backend server
 ├── .env                          # Environment configuration
-├── main.py                       # Main entry point
+├── main.py                       # CLI entry point
+├── run_local.py                  # One-command UI launcher
 ├── requirements.txt              # Python dependencies
 └── README.md                     # This file
 ```
@@ -81,7 +88,7 @@ Pull the Llama3 model:
 ollama pull llama3
 ```
 
-### 4. Configure Environment
+### 5. Configure Environment
 
 Edit `.env` file:
 
@@ -97,66 +104,53 @@ OLLAMA_BASE_URL=http://localhost:11434
 # API_KEY=your_api_key_here
 ```
 
-### 5. Create Input Folder
+### 6. Install Frontend Dependencies (for UI)
 
 ```bash
-mkdir input
+cd frontend
+npm install
+cd ..
 ```
 
-Then create your transcript in `input/transcript.txt`
+## Usage Options
 
-## Quick Start Guide
+Narratix offers two ways to generate videos:
 
-### 1. First Time Setup
+### Option 1: Web UI (Recommended)
+
+Run the complete web interface with a single command:
 
 ```bash
-# Clone or create project directory
-cd NARRATIX
-
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Install LaTeX (Required!)
-# Windows: Download MiKTeX from https://miktex.org/download
-# Mac: brew install mactex
-# Linux: sudo apt-get install texlive texlive-latex-extra
-
-# Install and start Ollama
-# Download from https://ollama.ai
-ollama pull llama3
-ollama serve
-
-# Create input folder and transcript
-mkdir input
-# Create input/transcript.txt with your content
+python run_local.py
 ```
 
-### 2. Run Your First Video
+This will:
+- Build the React frontend (if needed)
+- Start the FastAPI backend at http://localhost:8000
+- Serve the UI at http://localhost:8000
 
+**Additional flags:**
+- `--no-build`: Skip frontend build (use existing build or run dev server separately)
+- `--no-reload`: Start without auto-reload for more stable runs
+
+**Development mode** (with hot module replacement):
+
+Terminal 1 - Start backend:
 ```bash
-# Generate video from input/transcript.txt
-python main.py
-
-# Or with higher quality
-python main.py --quality h
+uvicorn web.server:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 3. Check Output
+Terminal 2 - Start frontend dev server:
+```bash
+cd frontend
+npm run dev
+```
 
-- Storyboard: `data/storyboard.json`
-- Generated scene: `scenes/generated_scene.py`
-- Video: `media/videos/generated_scene/`
+Open http://localhost:5173 (Vite dev server)
 
-## Usage Examples
+### Option 2: Command Line Interface
+
+Generate videos directly from the command line:
 
 ```bash
 # Use default transcript file (input/transcript.txt)
@@ -170,25 +164,69 @@ python main.py --transcript "Let me explain the Pythagorean theorem..."
 
 # With custom quality (l=low, m=medium, h=high, k=4k)
 python main.py --quality h
-```
 
-### Advanced Options
-
-```bash
 # Generate storyboard only (no video rendering)
 python main.py --generate-only
 
 # Use existing storyboard (skip generation)
 python main.py --skip-generation --storyboard data/storyboard.json
-
-# Custom output directory
-python main.py --output my_videos
-
-# Custom transcript file
-python main.py --transcript-file path/to/my_transcript.txt
 ```
 
-### Using Different LLM Providers
+## Quick Start Guide
+
+### Web UI Quick Start
+
+```bash
+# 1. Ensure all dependencies are installed
+pip install -r requirements.txt
+cd frontend && npm install && cd ..
+
+# 2. Start Ollama (if using local LLM)
+ollama serve
+
+# 3. Launch the UI
+python run_local.py
+
+# 4. Open browser to http://localhost:8000
+```
+
+### CLI Quick Start
+
+```bash
+# 1. Create input folder and transcript
+mkdir -p input
+echo "Your transcript here..." > input/transcript.txt
+
+# 2. Start Ollama (if using local LLM)
+ollama serve
+
+# 3. Generate video
+python main.py --quality m
+
+# 4. Check output in media/videos/
+```
+
+## Web UI Features
+
+The web interface provides:
+- **Transcript Management**: Upload or paste transcripts
+- **Storyboard Generation**: Generate and preview storyboards with visual feedback
+- **Live Rendering**: Start render jobs with real-time progress updates via WebSocket
+- **Output Management**: View, download, and manage generated videos
+
+### API Endpoints
+
+- `POST /transcript` - Upload transcript
+- `POST /generate` - Generate storyboard from transcript
+- `GET /storyboard` - Retrieve generated storyboard
+- `POST /storyboard` - Save edited storyboard
+- `POST /render` - Start background render job
+- `GET /status/{job_id}` - Check job status
+- `WS /ws/{job_id}` - WebSocket for live updates
+- `GET /outputs` - List available output files
+- `GET /download/{filename}` - Download rendered video
+
+## Using Different LLM Providers
 
 #### 1. Local Ollama (Default)
 ```bash
@@ -221,25 +259,6 @@ USE_API=true
 API_PROVIDER=groq
 API_KEY=gsk_...
 ```
-
-## Example Workflow
-
-1. **Create your transcript** in `input/transcript.txt`:
-```
-Welcome! Today we'll explore the beauty of the Pythagorean theorem.
-The theorem states that in a right triangle, a squared plus b squared equals c squared.
-Let me show you why this is true using a visual proof...
-```
-
-2. **Generate video**:
-```bash
-python main.py --quality m
-```
-
-3. **Output**:
-- `data/storyboard.json` - Generated storyboard
-- `scenes/generated_scene.py` - Generated Manim scene code
-- `media/videos/` - Rendered video file
 
 ## Storyboard JSON Structure
 
@@ -319,17 +338,6 @@ venv\Scripts\activate  # Windows
 source venv/bin/activate  # Mac/Linux
 ```
 
-### LaTeX Not Found Error
-**Error**: `'latex' is not recognized as an internal or external command`
-
-**Solution**:
-1. Install LaTeX (MiKTeX for Windows, MacTeX for Mac, texlive for Linux)
-2. Restart your terminal/PowerShell after installation
-3. Verify: `latex --version`
-4. If still failing, add LaTeX to your system PATH
-
-**Temporary Workaround**: The code will fall back to plain text for equations if LaTeX is unavailable, but this is not recommended for math-heavy content.
-
 ### Ollama Connection Error
 - Ensure Ollama is running: `ollama serve`
 - Check the base URL in `.env`
@@ -340,16 +348,18 @@ source venv/bin/activate  # Mac/Linux
 - Check LaTeX is installed for equation rendering
 - Try lower quality first: `python main.py --quality l`
 
-### JSON Parsing Error
-- The LLM might not return valid JSON
-- Try regenerating with `--generate-only` to inspect output
-- Consider using a more capable model (GPT-4, Claude Opus)
-- Check `data/storyboard.json` for formatting issues
+### Frontend Build Issues
+- Ensure Node.js is installed: `node --version`
+- Try clearing node_modules: `cd frontend && rm -rf node_modules && npm install`
+- If no package manager available, use Docker fallback:
+  ```bash
+  docker run --rm -v ${PWD}:/app -w /app/frontend node:18 bash -lc "npm ci && npm run build"
+  ```
 
-### Import Errors
-- Ensure all `__init__.py` files are present in each folder
-- Verify virtual environment is activated
-- Reinstall dependencies: `pip install -r requirements.txt`
+### Port Already in Use
+If port 8000 is already in use, either:
+- Stop the other process using port 8000
+- Or modify the port in `run_local.py` or when starting uvicorn manually
 
 ## Tips for Better Results
 
@@ -360,6 +370,16 @@ source venv/bin/activate  # Mac/Linux
 5. **Model selection**: GPT-4 or Claude Opus produce better storyboards than smaller models
 6. **Test incrementally**: Use `--generate-only` first to check the storyboard before rendering
 7. **Start with lower quality**: Use `-ql` (low quality) for faster testing, then `-qh` for final render
+8. **Web UI for iteration**: Use the web interface to quickly iterate on storyboards and preview before rendering
+
+## Testing
+
+Run tests locally:
+```bash
+pytest -q
+```
+
+A GitHub Actions workflow runs tests automatically on push and pull requests.
 
 ## License
 
